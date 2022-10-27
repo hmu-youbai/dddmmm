@@ -1,0 +1,261 @@
+def readgenome(name):
+    seq_file = []
+    i = 0
+    cc = []
+    with open(name, 'r') as input_fasta:
+        for line in input_fasta:
+            line = line.strip()
+            if line[0] == '>':
+                print(line)
+                cc.append(i)
+            seq_file.append(line)
+            i = i + 1
+    input_fasta.close()
+
+    dd = {}
+    for i in range(len(cc) - 1):
+        ss = "".join(seq_file[cc[i] + 1:cc[i + 1]])
+        pp = seq_file[cc[i]].split()
+        pp = pp[0]
+        # print(pp)
+        dd[pp] = ss
+    ss = "".join(seq_file[(cc[len(cc) - 1] + 1):(len(seq_file) - 1)])
+    print(seq_file[cc[len(cc)-1]].split()[0])
+    dd[seq_file[cc[len(cc) - 1]].split()[0]] = ss
+    return dd
+def DNA_complement1(sequence):
+    # 构建互补字典
+    comp_dict = {
+        "A":"T",
+        "T":"A",
+        "G":"C",
+        "C":"G",
+        "a":"t",
+        "t":"a",
+        "g":"c",
+        "c":"g",
+        "u":"a",
+        "N":"N"
+
+    }
+    #求互补序列
+    sequence_list = list(sequence)
+    sequence_list = [comp_dict[base] for base in sequence_list]
+    # s1 = sequence_list
+    # s1 = ''.join(sequence_list)
+    sequence_list.reverse()
+    string = ''.join(sequence_list)
+    return string
+    # return s1
+def writesamref(samname,dd,r1r2and150ref,nomapping,inordel):
+    cc = []
+    fout = open(r1r2and150ref, 'w')
+    fout2 = open(nomapping, 'w')
+    fout3=open(inordel, 'w')
+    with open(samname, 'r') as f1018:  #############这里是sam
+        for line in f1018:
+            line = line.strip()
+            line2 = line.split()
+            if line2[0].startswith('@'):
+                continue
+            if str(line2[1])=="4":
+                print(line, file=fout2)
+                continue
+            if len(line2[5]) <5:   #########需要解决边缘问题
+                if int(line2[1]) == 0:
+                    ref = dd[">" + line2[2]][int(line2[3]) - 1:int(line2[3]) + 1001]
+                    # if len(ref) < 1000:
+                    #     ref = dd[">" + line2[2]][int(line2[3]) - 1:]
+                else:
+                    ref = dd[">" + line2[2]][int(line2[3]) - 951:int(line2[3]) + len(line2[9])-1]
+                    # if len(ref)< 1000:
+                    #     ref = dd[">" + line2[2]][:int(line2[3]) + len(line2[9]) - 1]
+                    ref = DNA_complement1(ref)
+                tt = line2[0] + " " + line2[1] + " " + line2[2] + " " + line2[3] + " " + line2[9] + " " + ref
+                print(tt, file=fout)
+                cc.append(tt)
+            else:
+                print(line, file=fout3)
+    f1018.close()
+    fout.close()
+def DNA_complement2(sequence):
+    # 构建互补字典
+    comp_dict = {
+        "A":"T",
+        "T":"A",
+        "G":"C",
+        "C":"G",
+        "a":"t",
+        "t":"a",
+        "g":"c",
+        "c":"g",
+        "u":"a",
+        "N":"N"
+    }
+    #求互补序列
+    sequence_list = list(sequence)
+    sequence_list = [comp_dict[base] for base in sequence_list]
+    s1 = sequence_list
+    s1 = ''.join(sequence_list)
+    # sequence_list.reverse()
+    string = ''.join(sequence_list)
+    return string
+    # return s1
+import numpy as np
+def citie(aa,bb):
+    gg2=""
+    gg1=""
+    hh=0
+    aaa6=0
+    bbbindex = np.nonzero(np.array(np.fromstring(aa, dtype=np.uint8) ^ np.fromstring(bb, dtype=np.uint8)))[0]
+    if len(aa) - 1 not in bbbindex:
+        bbbindex = np.insert(bbbindex, len(bbbindex), len(aa) + 1)
+
+    for i in range(len(bbbindex) - 1):
+        if bbbindex[0] != 0 and i ==0:
+            gg2 = aa[0:bbbindex[0]]
+            gg1 = aa[(bbbindex[0] + 1):bbbindex[ 1]]
+            if len(gg1) > len(gg2):
+                gg2 = gg1
+                hh=i
+                aaa6=0
+            else:
+                aaa6=1
+        else:
+            gg1 = aa[bbbindex[i] + 1:bbbindex[i+1]]
+            if len(gg1) > len(gg2):
+                aaa6=0
+                gg2 = gg1
+                hh = i
+    if  aaa6==1:
+        fh=0
+    else:
+        fh = bbbindex[hh] + 1
+
+
+    return gg2,fh
+def read2all(ref1000,beiyong,rawr1r2,dd):
+    hyref = {}
+    with open(ref1000, 'r') as ref:
+        for line in ref:
+            if line[0].startswith('@'):
+                continue
+            line = line.strip()
+            ppp = line.split()
+            if len(ppp) < 6:
+                if int(ppp[1]) == 0:
+                    ref555 = dd[">" + ppp[2]][int(ppp[3]) - 1:]
+                else:
+                    ref555 = dd[">" + ppp[2]][:int(ppp[3]) + len(ppp[4])-1]
+                    ref555 = DNA_complement1(ref555)
+                ppp.append(ref555)
+            hyref[ppp[0].split("_")[1]] = ppp[5]
+    ref.close()
+
+    hypos1 = {}
+    hypos2 = {}
+    with open(beiyong, 'r') as pos:
+        for line in pos:
+            line = line.strip()
+            ppp = line.split()
+            hypos1[ppp[0]] = ppp[1]
+            hypos2[ppp[0]] = ppp[2]
+    pos.close()
+
+    r1r1 = {}
+    r2r2 = {}
+    with open(rawr1r2, 'r') as r1r2:
+        for line in r1r2:
+            line = line.strip()
+            ppp = line.split()
+            r1r1[ppp[0]] = ppp[1]
+            r2r2[ppp[0]] = ppp[2]
+    r1r2.close()
+    return hyref,hypos1,hypos2,r1r1,r2r2
+def yanzheng(samref,beiyong,rawr1r2,yzout,dd,ero):
+    hyref, hypos1, hypos2, r1r1, r2r2 = read2all(ref1000, qiehaoder2beiyong, r1r2quchong,dd)
+    jilu = []
+    eee = open(ero, "w")
+    key_list = hyref.keys()
+    for i in key_list:
+        zjpos = hypos2[i]
+        ctpos = len(hypos1[i])
+        wzcref = hyref[i]
+        if float(zjpos) - int(float(zjpos)) == 0:
+            wzcref1 = wzcref[:int(float(zjpos))]
+            wzcref2 = wzcref[int(float(zjpos)):2 * int(float(zjpos))]
+            wzcref2 = DNA_complement1(wzcref2)
+            yzwzc1 = wzcref1[ctpos - 6:ctpos + 6]
+            yzwzc2 = wzcref2[ctpos - 6:ctpos + 6]
+            if len(yzwzc1) != len(yzwzc2):
+                print(str(i),file=eee)
+                continue
+            cctt1 = citie(yzwzc1, yzwzc2)[0]
+            cctt2 = citie(yzwzc1, yzwzc2)[1]
+            if len(cctt1) < 3:
+                print(str(i), file=eee)
+                continue
+            else:
+                zhanshi2 = wzcref2[ctpos - 6 + cctt2:]
+                zhanshi2 = DNA_complement2(zhanshi2)
+            tt = r1r1[i] + "\n" + r2r2[i] + "\n" + wzcref1 + "\n" + (ctpos - 6 + cctt2) * " " + zhanshi2 + "\n"
+            jilu.append(tt)
+        else:
+            wzcref1 = wzcref[:int(float(zjpos))]
+            wzcref2 = wzcref[(int(float(zjpos))+1):(2 * int(float(zjpos))+1)]
+            wzcref2 = DNA_complement1(wzcref2)
+            yzwzc1 = wzcref1[ctpos - 6:ctpos + 6]
+            yzwzc2 = wzcref2[ctpos - 6:ctpos + 6]
+            if len(yzwzc1) != len(yzwzc2):
+                print(str(i), file=eee)
+                continue
+            cctt1 = citie(yzwzc1, yzwzc2)[0]
+            cctt2 = citie(yzwzc1, yzwzc2)[1]
+            if len(cctt1) < 3:
+                print(str(i), file=eee)
+                continue
+            else:
+                zhanshi2 = wzcref2[ctpos - 6 + cctt2:]
+                zhanshi2 = DNA_complement2(zhanshi2)
+            tt = r1r1[i] + "\n" + r2r2[i] + "\n" + wzcref[:int(float(zjpos))+1] + "\n" + (ctpos - 6 + cctt2) * " " + zhanshi2 + "\n"
+            jilu.append(tt)
+    eee.close()
+
+
+    ff = open(yzout, "w")
+    for i in jilu:
+        print(i, file=ff)
+    ff.close()
+def report2(wzcresults,qiehaoder2,ero,inordel,nomapping):
+    with open(wzcresults, 'r') as y1,open(qiehaoder2, 'r') as y2,open(ero,
+    'r') as y3,open(inordel, 'r') as y4,open(nomapping, 'r') as y5:
+        lly1 = len(y2.readlines())
+        lly2 = len(y1.readlines())/5
+        lly3 = len(y3.readlines())
+        lly4 = len(y4.readlines())
+        lly5 = len(y5.readlines())
+        print("overlap大于5且长度大于35的r2数："+str(lly1)+"\n"+"符合模型的read数："+str(int(lly2))+"\n"+"不符合模型的read数："+str(lly3)
+              +"\n"+"比对存在插入或缺失的read数："+str(lly4)+"\n"+"未比对到小鼠基因组的read数："+str(lly5))
+
+qiehaoder2="CGS-ES-cutr2"
+provideref="GRCm39.genome.fa"
+providesam="cutr2.sam"
+ref1000="CGS-ES-pos"
+r1r2quchong="CGS-ES-R1R2"
+qiehaoder2beiyong="CGS-ES-cutr2beiyong"
+wzcresults="CGS-ES-linshi"
+nomapping="CGS-ES-nomapping"
+inordel="CGS-ES-inordel"
+ero="CGS-ES-ero"
+
+dd = readgenome(provideref)
+writesamref(providesam,dd,ref1000,nomapping,inordel)  ####gg接上一步,sam需要删除抬头，第三位为自己起名
+yanzheng(ref1000, qiehaoder2beiyong,r1r2quchong,wzcresults,dd,ero)
+report2(wzcresults,qiehaoder2,ero,inordel,nomapping)
+
+
+
+
+
+
+
