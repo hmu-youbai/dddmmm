@@ -1,0 +1,72 @@
+import re
+import numpy as np
+import random
+
+ref1028=""
+with open("chr1","r")as  chch:
+    for line in chch:
+        line = line.strip()
+        ref1028=ref1028+line
+chch.close()
+
+def tiquref(cc,san):
+    POS= [substr.start() for substr in re.finditer(san, cc)]
+    POS = np.array(POS)
+    diff = np.diff(POS)
+    return POS,diff
+AGC_POS, AGC_diff=tiquref(ref1028,"AGC")
+AGT_POS, AGT_diff=tiquref(ref1028,"AGT")
+ACT_POS, ACT_diff=tiquref(ref1028,"ACT")
+ACG_POS, ACG_diff=tiquref(ref1028,"ACG")
+ATC_POS, ATC_diff=tiquref(ref1028,"ATC")
+ATG_POS, ATG_diff=tiquref(ref1028,"ATG")
+GAC_POS, GAC_diff=tiquref(ref1028,"GAC")
+GAT_POS, GAT_diff=tiquref(ref1028,"GAT")
+#####################################################################################################################
+random_pos= int(random.uniform(1, 100000-150))
+random_read=ref1028[random_pos:random_pos+1000]
+###################################################################################################随机序列生成完毕
+def tiqu(read,abc):
+    tiqu_res = [substr.start() for substr in re.finditer(abc, read)]
+    tiqu_res = np.array(tiqu_res)
+    tiqu_diff = np.diff(tiqu_res)
+    return tiqu_res,tiqu_diff
+test_AGC=tiqu(random_read,"AGC")[1]
+test_AGT=tiqu(random_read,"AGT")[1]
+test_ACT=tiqu(random_read,"ACT")[1]
+test_ACG=tiqu(random_read,"ACG")[1]
+test_ATC=tiqu(random_read,"ATC")[1]
+test_ATG=tiqu(random_read,"ATG")[1]
+test_GAC=tiqu(random_read,"GAC")[1]
+test_GAT=tiqu(random_read,"GAT")[1]
+#######################################################
+
+def qiuhe(ref_diff,read_diff):
+    linshi1=[]
+    for i in range(len(ref_diff) - 10):
+        for j in range(len(read_diff) - 3, len(read_diff) + 3):
+            jiji = np.sum(ref_diff[i:i + j])
+            if np.sum(read_diff) + 5 > jiji > np.sum(read_diff) - 5:
+                linshi1.append([i, i + j])
+    return linshi1
+
+rrr1=qiuhe(AGC_diff,test_AGC)
+rrr2=qiuhe(AGT_diff,test_AGT)
+
+
+
+rrr1pos=AGC_POS[rrr1]
+rrr2pos=AGT_POS[rrr2]
+
+
+
+
+
+
+
+
+
+
+
+
+
