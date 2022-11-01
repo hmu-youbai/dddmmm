@@ -1,0 +1,110 @@
+import re
+import numpy as np
+import random
+ref1028 = ""
+with open("chr1", "r") as chch:
+    for line in chch:
+        line = line.strip()
+        ref1028 = ref1028 + line
+chch.close()
+threename = []
+for i in "AGCT":
+    for j in "AGCT":
+        for k in "AGCT":
+            threename.append(i + j + k)
+refPOS = {}
+for i in threename:
+    refPOS[i + "_POS"] = []
+for i in range(len(ref1028) - 2):            ##############################################唯一需要改的
+    refPOS[ref1028[i:i + 3] + "_POS"].append(i)
+refdiff = {}
+for i in threename:
+    aaa = np.array(refPOS[i + "_POS"])
+    refdiff[i + "_diff"] = np.diff(aaa)
+#####################################################################################################################
+random_pos= int(random.uniform(1, 100000-300))
+random_read=ref1028[random_pos:random_pos+300]       ################################### 调整随机序列长度
+###################################################################################################随机序列生成完毕
+testPOS = {}
+for i in threename:
+    testPOS["test_"+i] = []
+for i in range(len(random_read) - 2):
+    testPOS["test_"+random_read[i:i + 3]].append(i)
+testdiff = {}
+for i in threename:
+    aaa = np.array(testPOS["test_"+i])
+    testdiff[i + "_diff"] = np.diff(aaa)
+#############################################################################################
+########################################################
+
+def qiuhe(ref_diff,read_diff):
+    linshi1=[]
+    for i in range(len(ref_diff) - 10):
+        for j in range(len(read_diff) - 3, len(read_diff) + 3):
+            jiji = np.sum(ref_diff[i:i + j])
+            if np.sum(read_diff) + 5 > jiji > np.sum(read_diff) - 5:
+                linshi1.append([i, i + j])
+    return linshi1
+reftest={}
+for i in threename:
+    linshi=qiuhe(refdiff[i+"_diff"],testdiff[i + "_diff"])
+    reftest[i]=linshi
+
+
+
+
+# def zhuanhuan()
+zhuanhuan={}
+for i in threename:
+    zhuanhuan[i] = []
+for i in threename:
+    for j in reftest[i]:
+        ll=[refPOS[i+"_POS"][j[0]],refPOS[i+"_POS"][j[1]]]
+        zhuanhuan[i].append(ll)
+
+def jiaoji(rrr1pos,rrr2pos):       #########需要调节范围
+    r1result = []
+    for i in rrr1pos:
+        for j in rrr2pos:
+            a = i[0]
+            b = i[1]
+            c = j[0]
+            d = j[1]
+            left = min(a, b, c, d)
+            right = max(a, b, c, d)
+            if right - left < 350:
+                r1result.append(i)
+    return r1result
+
+
+jjj={}
+for i in range(63):
+    aa=threename[0]
+    bb=threename[i+1]
+    linshi=jiaoji(zhuanhuan[aa],zhuanhuan[bb])
+    jjj[bb]=linshi
+jjj[aa]=[]
+
+cs={}
+zz=[]
+for i in range(63):
+    aa = threename[i]
+    th=[i for k in jjj[aa] for i in k]
+    th = list(set(th))
+    zz=zz+th
+
+
+
+#
+# zzresult=th1+th2+th3+th4+th5+th6+th7
+#
+# #
+print(f"列表中出现次数最多的元素是：{max(zz, key=zz.count)} ，总出现次数：{zz.count(max(zz, key=zz.count))}")
+# #
+#
+# #
+# from collections import  Counter
+# ccc=Counter(zz)
+#
+#
+# print(ccc.most_common())
